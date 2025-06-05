@@ -1,6 +1,6 @@
 // Fetches and displays the latest United States national debt from the Fiscal Data API
 // https://fiscaldata.treasury.gov/api-documentation/
-document.addEventListener('DOMContentLoaded', () => {
+function fetchDebt() {
   fetch('https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny?sort=-record_date&page[size]=1')
     .then(resp => resp.json())
     .then(data => {
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const debtEl = document.getElementById('debt-value');
         const dateEl = document.getElementById('debt-date');
         if (debtEl) {
-          debtEl.textContent = '$' + amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+          debtEl.textContent = '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
         if (dateEl) {
           dateEl.textContent = date;
@@ -19,4 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     })
     .catch(err => console.error('Failed to fetch debt data:', err));
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', fetchDebt);
+} else {
+  fetchDebt();
+}
