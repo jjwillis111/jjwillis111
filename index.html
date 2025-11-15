@@ -4,344 +4,170 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Local Bites Map</title>
-  <meta name="description" content="Community-driven map of restaurant deals">
+  <title>Neighborhood Deals Map</title>
+  <meta name="description" content="Drop pins for restaurant specials using OpenStreetMap.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-o9N1j7kG96bS0bZ2dw3ykN9ofuU0Ww2GZ7YBf2g0ZQw=" crossorigin="">
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
 <body>
-  <header class="hero">
-    <div class="container py-5">
-      <div class="row align-items-center">
-        <div class="col-lg-7">
-          <p class="eyebrow mb-3">Community Powered</p>
-          <h1 class="display-4 fw-bold">Share neighborhood food deals without creating an account.</h1>
-          <p class="lead mb-4">Local Bites Map lets anyone drop a pin on Google Maps and describe the special they're seeing
-            right now. It's the fastest way to help neighbors discover affordable meals.</p>
-          <div class="hero-cta">
-            <a class="btn btn-light btn-lg me-3" href="#map">Open the Map</a>
-            <a class="btn btn-outline-light btn-lg" href="#how-it-works">How it works</a>
-          </div>
-          <div class="stats mt-5">
-            <div>
-              <p class="stat-label">Deals shared today</p>
-              <p class="stat-value" id="dealCount">0</p>
-            </div>
-            <div>
-              <p class="stat-label">Average savings</p>
-              <p class="stat-value">$8</p>
-            </div>
-            <div>
-              <p class="stat-label">Cities represented</p>
-              <p class="stat-value" id="cityCount">1</p>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-5 mt-4 mt-lg-0">
-          <div class="hero-card">
-            <h2>Why we built this</h2>
-            <p>Local restaurants run flash deals, happy hours, and community nights all the time. Most never make it online.
-              This project gives neighbors a lightweight bulletin board—no logins, no friction.</p>
-            <ul>
-              <li>Click anywhere on the map to select a restaurant.</li>
-              <li>Describe the deal and when it ends.</li>
-              <li>Your marker appears instantly for everyone.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
+  <header>
+    <p>Community-powered food tracker</p>
+    <h1>Share local restaurant deals anonymously.</h1>
+    <p>No accounts and no forms to memorize. Tap a spot on the OpenStreetMap view, jot down the deal, and it lives in
+      everyone's browser.</p>
   </header>
 
   <main>
-    <section class="map-section" id="map-section">
-      <div class="container">
-        <div class="row g-4">
-          <div class="col-lg-8">
-            <div class="map-wrapper">
-              <div id="map" aria-label="Google map showing restaurant deals"></div>
-              <div class="map-placeholder" id="mapPlaceholder" role="alert">
-                <p>Add your Google Maps JavaScript API key to enable the live map.</p>
-                <code>&lt;script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&amp;callback=initMap" async defer&gt;&lt;/script&gt;</code>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="submission-panel">
-              <div class="panel-header">
-                <h2 class="h4 mb-0">Share a deal</h2>
-                <p class="text-muted mb-0">Click the map to pick a location, then fill out the form.</p>
-              </div>
-              <form id="dealForm" class="needs-validation" novalidate>
-                <div class="mb-3">
-                  <label class="form-label" for="restaurantName">Restaurant</label>
-                  <input class="form-control" id="restaurantName" type="text" placeholder="ex. Maria's Taqueria" required>
-                  <div class="invalid-feedback">Please add the restaurant name.</div>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label" for="dealDetails">Deal details</label>
-                  <textarea class="form-control" id="dealDetails" rows="3" placeholder="$2 tacos until 7pm" required></textarea>
-                  <div class="invalid-feedback">Tell neighbors what the deal is.</div>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label" for="timeframe">Timing (optional)</label>
-                  <input class="form-control" id="timeframe" type="text" placeholder="Weekdays 4-6pm">
-                </div>
-                <div class="location-indicator mb-4">
-                  <p class="mb-1 fw-semibold">Selected location</p>
-                  <p id="selectedLocation">Tap the map to drop a pin.</p>
-                </div>
-                <button class="btn btn-primary w-100" type="submit">Post deal</button>
-                <p class="legal text-muted mt-3">By sharing you confirm the information is accurate to the best of your
-                  knowledge. No login required—your post is anonymous.</p>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
+    <section class="panel" aria-labelledby="mapTitle">
+      <div class="status" id="mapTitle">Tap anywhere on the map to select a restaurant.</div>
+      <div id="map" role="region" aria-label="OpenStreetMap with community food deals"></div>
+      <p class="status" id="selectedLocation">No location selected yet.</p>
     </section>
 
-    <section class="deals-feed" id="feed">
-      <div class="container">
-        <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between mb-4 gap-3">
-          <div>
-            <p class="eyebrow mb-1">Live community feed</p>
-            <h2 class="h3 mb-0">Latest deals added to the map</h2>
-          </div>
-          <div class="search-box">
-            <label class="form-label" for="searchInput">Search</label>
-            <input class="form-control" type="search" id="searchInput" placeholder="Try typing pizza, sushi, happy hour…">
-          </div>
-        </div>
-        <div id="noResults" class="alert alert-info d-none" role="status">No deals match that search yet. Maybe add one?</div>
-        <div id="dealsList" class="row g-4"></div>
-      </div>
+    <section class="panel" aria-labelledby="formTitle">
+      <h2 id="formTitle">Share a deal</h2>
+      <form id="dealForm">
+        <label for="restaurantName">Restaurant</label>
+        <input id="restaurantName" name="restaurant" type="text" placeholder="ex. Maria's Taqueria" required>
+
+        <label for="dealDetails">Deal details</label>
+        <textarea id="dealDetails" name="details" placeholder="$2 tacos until 7pm" required></textarea>
+
+        <label for="timeframe">Timing (optional)</label>
+        <input id="timeframe" name="timeframe" type="text" placeholder="Weekdays 4-6pm">
+
+        <button type="submit">Post deal</button>
+        <p class="status">Pins live only in your browser storage. Clear site data to reset everything.</p>
+      </form>
     </section>
 
-    <section class="how-it-works" id="how-it-works">
-      <div class="container">
-        <div class="row g-4 align-items-center">
-          <div class="col-lg-6">
-            <h2 class="display-6">Built for quick sharing</h2>
-            <p class="lead">Everything happens in three steps. No user accounts, no passwords, nothing to remember.</p>
-            <div class="timeline">
-              <div>
-                <span>1</span>
-                <div>
-                  <h3>Pick the spot</h3>
-                  <p>Click any restaurant on the map (or the sidewalk right outside of it) to capture the location.</p>
-                </div>
-              </div>
-              <div>
-                <span>2</span>
-                <div>
-                  <h3>Describe the deal</h3>
-                  <p>Add the key details: what the offer is, price point, and when it ends.</p>
-                </div>
-              </div>
-              <div>
-                <span>3</span>
-                <div>
-                  <h3>Publish instantly</h3>
-                  <p>Your marker appears for everyone along with an accessible card in the feed below the map.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-6">
-            <div class="card bg-dark text-white p-4 h-100 gradient-card">
-              <h3>Privacy-first approach</h3>
-              <p>We only store the details required to show your pin: restaurant name, description, and the coordinates you
-                selected. Everything is saved locally in your browser so you can edit or clear it anytime.</p>
-              <button class="btn btn-outline-light mt-auto" id="clearStorageBtn" type="button">Clear my saved data</button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <section class="panel full-span" aria-live="polite">
+      <div class="status">Newest deals drop to the top.</div>
+      <div class="deals" id="dealsList"></div>
+      <p class="status" id="emptyState">No deals yet. Drop the first pin!</p>
     </section>
   </main>
 
-  <footer class="footer text-center py-4">
-    <div class="container">
-      <p class="mb-1">Made by neighbors for neighbors. Spread the word about delicious local deals.</p>
-      <small>Need a backend? Fork this static prototype and connect it to your favorite database.</small>
-    </div>
-  </footer>
-
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-o9N1j7kG96bS0bZ2dw3ykN9ofuU0Ww2GZ7YBf2g0ZQw=" crossorigin=""></script>
   <script>
-    const storageKey = 'local-bites-deals';
-    const deals = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    let map;
-    let selectedLatLng = null;
+    const map = L.map('map').setView([39.5, -98.35], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    const storageKey = 'neighborhood-deals';
+    const selectedLocation = document.getElementById('selectedLocation');
+    const form = document.getElementById('dealForm');
+    const dealsList = document.getElementById('dealsList');
+    const emptyState = document.getElementById('emptyState');
+
+    let pendingLatLng = null;
     let previewMarker = null;
-    const markers = new Map();
+    const savedDeals = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    const deals = Array.isArray(savedDeals) ? savedDeals : [];
+    const markers = [];
 
-    function saveDeals() {
-      localStorage.setItem(storageKey, JSON.stringify(deals));
-      updateStats();
-    }
+    const formatDate = (timestamp) => new Date(timestamp).toLocaleString([], {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    });
 
-    function updateStats() {
-      document.getElementById('dealCount').textContent = deals.length;
-      const uniqueCities = new Set(deals.map((deal) => deal.city || 'Your City'));
-      document.getElementById('cityCount').textContent = uniqueCities.size || 1;
-    }
-
-    function initMap() {
-      const defaultCenter = { lat: 37.7749, lng: -122.4194 };
-      map = new google.maps.Map(document.getElementById('map'), {
-        center: defaultCenter,
-        zoom: 12,
-        mapId: 'LOCAL_BITES'
-      });
-
-      map.addListener('click', (event) => {
-        selectedLatLng = { lat: event.latLng.lat(), lng: event.latLng.lng() };
-        document.getElementById('selectedLocation').textContent = `${selectedLatLng.lat.toFixed(4)}, ${selectedLatLng.lng.toFixed(4)}`;
-
-        if (!previewMarker) {
-          previewMarker = new google.maps.Marker({
-            map,
-            icon: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
-          });
+    const createCard = (deal, index) => {
+      const card = document.createElement('article');
+      card.className = 'deal-card';
+      card.innerHTML = `
+        <h3>${deal.restaurant}</h3>
+        <p>${deal.details}</p>
+        ${deal.timeframe ? `<p><strong>Timing:</strong> ${deal.timeframe}</p>` : ''}
+        <p class="status">Added ${formatDate(deal.timestamp)}</p>
+        <button type="button" data-index="${index}">Zoom to pin</button>
+      `;
+      card.querySelector('button').addEventListener('click', (event) => {
+        const idx = Number(event.currentTarget.dataset.index);
+        const target = deals[idx];
+        if (target) {
+          map.flyTo(target.coords, 15, { duration: 0.75 });
+          markers[idx]?.openPopup();
         }
-
-        previewMarker.setPosition(event.latLng);
       });
+      return card;
+    };
 
-      document.getElementById('mapPlaceholder').style.display = 'none';
-      renderDeals();
-    }
+    const addDealMarker = (deal, index) => {
+      const marker = L.marker(deal.coords).addTo(map);
+      marker.bindPopup(`<strong>${deal.restaurant}</strong><br>${deal.details}`);
+      markers[index] = marker;
+    };
 
-    function renderDeals(filter = '') {
-      const list = document.getElementById('dealsList');
-      list.innerHTML = '';
-      const normalizedFilter = filter.trim().toLowerCase();
-
-      const filteredDeals = deals.filter((deal) => {
-        if (!normalizedFilter) return true;
-        return [deal.name, deal.description, deal.timeframe].some((value) =>
-          (value || '').toLowerCase().includes(normalizedFilter)
-        );
-      });
-
-      document.getElementById('noResults').classList.toggle('d-none', filteredDeals.length > 0);
-
-      filteredDeals.forEach((deal) => {
-        const column = document.createElement('div');
-        column.className = 'col-md-6 col-xl-4';
-        column.innerHTML = `
-          <article class="deal-card" data-id="${deal.id}">
-            <div>
-              <p class="deal-location">${deal.name}</p>
-              <p class="deal-description">${deal.description}</p>
-              ${deal.timeframe ? `<p class="deal-time">${deal.timeframe}</p>` : ''}
-            </div>
-            <div class="deal-meta">
-              <span>${deal.created}</span>
-              <button type="button" class="btn btn-sm btn-outline-primary" data-focus="${deal.id}">Locate on map</button>
-            </div>
-          </article>`;
-        list.appendChild(column);
-      });
-
-      document.querySelectorAll('[data-focus]').forEach((btn) => {
-        btn.addEventListener('click', (event) => {
-          const id = event.target.getAttribute('data-focus');
-          const marker = markers.get(id);
-          if (marker && map) {
-            map.panTo(marker.getPosition());
-            map.setZoom(Math.max(map.getZoom(), 14));
-            marker.setAnimation(google.maps.Animation.BOUNCE);
-            setTimeout(() => marker.setAnimation(null), 1500);
-          }
-        });
-      });
-
-      if (typeof google !== 'undefined' && map) {
-        markers.forEach((marker) => marker.setMap(null));
-        markers.clear();
-        deals.forEach((deal) => {
-          const marker = new google.maps.Marker({
-            position: deal.position,
-            map,
-            title: `${deal.name}: ${deal.description}`
-          });
-          const infoWindow = new google.maps.InfoWindow({
-            content: `<strong>${deal.name}</strong><p>${deal.description}</p>${deal.timeframe ? `<p>${deal.timeframe}</p>` : ''}`
-          });
-          marker.addListener('click', () => infoWindow.open({ map, anchor: marker }));
-          markers.set(deal.id, marker);
-        });
+    const renderDeals = () => {
+      dealsList.innerHTML = '';
+      if (!deals.length) {
+        emptyState.hidden = false;
+        return;
       }
-    }
+      emptyState.hidden = true;
+      deals
+        .map((deal, index) => ({ deal, index }))
+        .sort((a, b) => b.deal.timestamp - a.deal.timestamp)
+        .forEach(({ deal, index }) => {
+          dealsList.appendChild(createCard(deal, index));
+        });
+    };
 
-    function addDeal(deal) {
-      deals.unshift(deal);
-      saveDeals();
-      renderDeals(document.getElementById('searchInput').value);
-    }
+    deals.forEach((deal, index) => addDealMarker(deal, index));
+    renderDeals();
 
-    document.getElementById('dealForm').addEventListener('submit', (event) => {
+    map.on('click', (event) => {
+      pendingLatLng = event.latlng;
+      selectedLocation.textContent = `Selected: ${pendingLatLng.lat.toFixed(4)}, ${pendingLatLng.lng.toFixed(4)}`;
+      if (!previewMarker) {
+        previewMarker = L.marker(pendingLatLng, { opacity: 0.6, interactive: false }).addTo(map);
+      } else {
+        previewMarker.setLatLng(pendingLatLng);
+      }
+    });
+
+    form.addEventListener('submit', (event) => {
       event.preventDefault();
-      const form = event.target;
-      if (!form.checkValidity()) {
-        form.classList.add('was-validated');
+      if (!pendingLatLng) {
+        selectedLocation.textContent = 'Pick a spot before posting.';
         return;
       }
-      if (!selectedLatLng) {
-        document.getElementById('selectedLocation').textContent = 'Tap the map first so we know where to place the marker.';
-        document.getElementById('selectedLocation').classList.add('text-danger');
-        return;
-      }
-      document.getElementById('selectedLocation').classList.remove('text-danger');
-      const name = document.getElementById('restaurantName').value.trim();
-      const description = document.getElementById('dealDetails').value.trim();
-      const timeframe = document.getElementById('timeframe').value.trim();
-      const deal = {
-        id: crypto.randomUUID(),
-        name,
-        description,
-        timeframe,
-        position: selectedLatLng,
-        created: new Date().toLocaleString(),
-        city: 'Your City'
+      const data = new FormData(form);
+      const newDeal = {
+        restaurant: data.get('restaurant').trim(),
+        details: data.get('details').trim(),
+        timeframe: data.get('timeframe').trim(),
+        coords: pendingLatLng,
+        timestamp: Date.now()
       };
-      addDeal(deal);
+
+      if (!newDeal.restaurant || !newDeal.details) {
+        return;
+      }
+
+      deals.push(newDeal);
+      localStorage.setItem(storageKey, JSON.stringify(deals));
+      addDealMarker(newDeal, deals.length - 1);
+      renderDeals();
       form.reset();
-      selectedLatLng = null;
-      document.getElementById('selectedLocation').textContent = 'Tap the map to drop a pin.';
+      pendingLatLng = null;
+      selectedLocation.textContent = 'Posted! Tap another spot to keep going.';
       if (previewMarker) {
-        previewMarker.setMap(null);
+        map.removeLayer(previewMarker);
         previewMarker = null;
       }
     });
-
-    document.getElementById('searchInput').addEventListener('input', (event) => {
-      renderDeals(event.target.value);
-    });
-
-    document.getElementById('clearStorageBtn').addEventListener('click', () => {
-      localStorage.removeItem(storageKey);
-      deals.splice(0, deals.length);
-      renderDeals();
-      updateStats();
-    });
-
-    renderDeals();
-    updateStats();
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-    crossorigin="anonymous"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
 </body>
 
 </html>
